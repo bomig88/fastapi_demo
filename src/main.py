@@ -62,14 +62,55 @@ def read_member(member_id: int, db: Session = Depends(get_db)):
     return db_member
 
 
-@app.post("/members/{member_id}/books/", response_model=schemas.Book)
-def create_book_for_member(
-        member_id: int, book: schemas.BookCreate, db: Session = Depends(get_db)
+@app.post("/members/{member_id}/orders/", response_model=schemas.Order)
+def create_order_for_member(
+        member_id: int, order: schemas.OrderCreate, order_products: List[schemas.OrderProductCreate],
+        db: Session = Depends(get_db)
 ):
-    return crud.create_member_book(db=db, book=book, member_id=member_id)
+    order = crud.create_member_order(db=db, order=order, member_id=member_id)
+
+    for op in order_products:
+        crud.create_order_product(db=db, order_product=op, order_id=order.id)
+
+    return crud.get_order(db=db, order_id=order.id)
 
 
-@app.get("/books/", response_model=List[schemas.Book])
-def read_books(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    books = crud.get_books(db=db, skip=skip, limit=limit)
-    return books
+@app.get("/orders/", response_model=List[schemas.Order])
+def read_orders(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    orders = crud.get_orders(db=db, skip=skip, limit=limit)
+    return orders
+
+
+@app.get("/orders/{order_id}", response_model=schemas.Order)
+def read_order(order_id: int, db: Session = Depends(get_db)):
+    order = crud.get_order(db=db, order_id=order_id)
+    return order
+
+
+@app.get("/order-products/", response_model=List[schemas.Order])
+def read_orders(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    orders = crud.get_order_products(db=db, skip=skip, limit=limit)
+    return orders
+
+
+@app.get("/orders-products/{order_product_id}", response_model=schemas.Order)
+def read_order(order_product_id: int, db: Session = Depends(get_db)):
+    order = crud.get_order_product(db=db, order_product_id=order_product_id)
+    return order
+
+
+@app.post("/products/", response_model=schemas.Product)
+def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db)):
+    return crud.create_product(db=db, product=product)
+
+
+@app.get("/products/", response_model=List[schemas.Product])
+def read_products(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    products = crud.get_products(db=db, skip=skip, limit=limit)
+    return products
+
+
+@app.get("/products/{product_id}", response_model=schemas.Product)
+def read_product(product_id: int, db: Session = Depends(get_db)):
+    products = crud.get_product(db=db, product_id=product_id)
+    return products
